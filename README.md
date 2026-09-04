@@ -50,7 +50,7 @@ Source to HTML is a C-based lexical analyzer that reads a C source file, identif
     Run :- ./a.out
 ```
 
-**svg**
+
 
 🔶**Sample Input**
 

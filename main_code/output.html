@@ -1,0 +1,413 @@
+<html>
+<head>
+<title>Source to HTML</title>
+<style>
+.keyword { color: blue; }
+.identifier { color: black; }
+.operator { color: red; }
+.number { color: green; }
+.character { color: darkgreen; }
+.comment { color: gray; }
+.string { color: brown; }
+.special { color: purple; }
+.preprocessor { color: orange; }
+</style>
+</head>
+<body>
+<pre>
+<span class="preprocessor">#include "lexer.h"</span>
+<span class="preprocessor">#include "keyword.h"</span>
+<span class="preprocessor">#include "operator.h"</span>
+<span class="preprocessor">#include &lt;string.h&gt;</span>
+<span class="preprocessor">#include "html.h"</span>
+<span class="preprocessor">#include &lt;stdio.h&gt;</span>
+
+<span class="keyword">void</span> <span class="identifier">lexical_analyzer</span><span class="special">(</span><span class="identifier">FILE</span> <span class="operator">*</span><span class="identifier">iinput</span><span class="special">,</span> <span class="identifier">FILE</span> <span class="operator">*</span><span class="identifier">ooutput</span><span class="special">)</span>
+<span class="special">{</span>
+    <span class="keyword">int</span> <span class="identifier">ch</span><span class="special">;</span>
+    <span class="keyword">char</span> <span class="identifier">word</span><span class="special">[</span><span class="number">100</span><span class="special">]</span><span class="special">;</span>
+    <span class="keyword">int</span> <span class="identifier">pos</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+    <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+    <span class="keyword">while</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+    <span class="special">{</span>
+        <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">' '</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\n'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\t'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\r'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="identifier">fputc</span><span class="special">(</span><span class="identifier">ch</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="keyword">continue</span><span class="special">;</span>
+        <span class="special">}</span>
+
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'#'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;span class=\"preprocessor\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">while</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="character">'\n'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\n'</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">fputc</span><span class="special">(</span><span class="identifier">ch</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+        <span class="special">}</span>
+
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'a'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'z'</span><span class="special">)</span> <span class="operator">||</span>
+                <span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'A'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'Z'</span><span class="special">)</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'_'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="keyword">while</span><span class="special">(</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'a'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'z'</span><span class="special">)</span> <span class="operator">||</span>
+                  <span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'A'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'Z'</span><span class="special">)</span> <span class="operator">||</span>
+                  <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'_'</span> <span class="operator">||</span>
+                  <span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'0'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'9'</span><span class="special">)</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">word</span><span class="special">[</span><span class="identifier">pos</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+                <span class="identifier">pos</span><span class="operator">++</span><span class="special">;</span>
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">word</span><span class="special">[</span><span class="identifier">pos</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+            <span class="keyword">int</span> <span class="identifier">flag</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span> <span class="identifier">i</span> <span class="operator">&lt;</span>  <span class="number">32</span><span class="special">;</span> <span class="identifier">i</span><span class="operator">++</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="keyword">if</span><span class="special">(</span><span class="identifier">strcmp</span><span class="special">(</span><span class="identifier">word</span><span class="special">,</span> <span class="identifier">keyword</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span><span class="special">)</span> <span class="operator">==</span> <span class="number">0</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">flag</span> <span class="operator">=</span>  <span class="number">1</span><span class="special">;</span>
+                    <span class="keyword">break</span><span class="special">;</span>
+                <span class="special">}</span>
+            <span class="special">}</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">flag</span> <span class="operator">==</span> <span class="number">1</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"keyword\"&gt;%s&lt;/span&gt;&quot;</span><span class="special">,</span>
+                        <span class="identifier">word</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+            <span class="keyword">else</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"identifier\"&gt;%s&lt;/span&gt;&quot;</span><span class="special">,</span>
+                        <span class="identifier">word</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">pos</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+        <span class="special">}</span>
+
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'0'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'9'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="keyword">char</span> <span class="identifier">num</span><span class="special">[</span><span class="number">100</span><span class="special">]</span><span class="special">;</span>
+            <span class="keyword">int</span> <span class="identifier">index</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+            <span class="keyword">int</span> <span class="identifier">dot_count</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="keyword">while</span><span class="special">(</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">&gt;=</span> <span class="character">'0'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">&lt;=</span> <span class="character">'9'</span><span class="special">)</span> <span class="operator">||</span>
+                  <span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'.'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">dot_count</span> <span class="operator">==</span> <span class="number">0</span><span class="special">)</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'.'</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">dot_count</span><span class="operator">++</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">num</span><span class="special">[</span><span class="identifier">index</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+                <span class="identifier">index</span><span class="operator">++</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">num</span><span class="special">[</span><span class="identifier">index</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                    <span class="string">&quot;&lt;span class=\"number\"&gt;%s&lt;/span&gt;&quot;</span><span class="special">,</span>
+                    <span class="identifier">num</span><span class="special">)</span><span class="special">;</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* CHARACTER LITERAL */</span>
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\''</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="keyword">char</span> <span class="identifier">character</span><span class="special">[</span><span class="number">5</span><span class="special">]</span><span class="special">;</span>
+            <span class="keyword">int</span> <span class="identifier">ind</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="operator">++</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>     <span class="comment">/* opening ' */</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\\'</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="operator">++</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="operator">++</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+            <span class="special">}</span>
+            <span class="keyword">else</span>
+            <span class="special">{</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="operator">++</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\''</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="operator">++</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span> <span class="comment">/* closing ' */</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"character\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+                    <span class="identifier">character</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">!=</span> <span class="character">'\0'</span><span class="special">;</span>
+                    <span class="identifier">i</span><span class="operator">++</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">character</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span><span class="special">)</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+            <span class="keyword">else</span>
+            <span class="special">{</span>
+                <span class="identifier">character</span><span class="special">[</span><span class="identifier">ind</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"invalid\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+                    <span class="identifier">character</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">!=</span> <span class="character">'\0'</span><span class="special">;</span>
+                    <span class="identifier">i</span><span class="operator">++</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">character</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span><span class="special">)</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* /, // AND /*  COMMENTS */</span>
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'/'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'/'</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"comment\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">fputc</span><span class="special">(</span><span class="character">'/'</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">fputc</span><span class="special">(</span><span class="character">'/'</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">while</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="character">'\n'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+                    <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\n'</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">fputc</span><span class="special">(</span><span class="identifier">ch</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+                    <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                <span class="special">}</span>
+            <span class="special">}</span>
+
+            <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'*'</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"comment\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">fputc</span><span class="special">(</span><span class="character">'/'</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">fputc</span><span class="special">(</span><span class="character">'*'</span><span class="special">,</span> <span class="identifier">output</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">while</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+
+                    <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'*'</span><span class="special">)</span>
+                    <span class="special">{</span>
+                        <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+                        <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+                        <span class="special">{</span>
+                            <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+                        <span class="special">}</span>
+
+                        <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'/'</span><span class="special">)</span>
+                        <span class="special">{</span>
+                            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                                    <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                            <span class="keyword">break</span><span class="special">;</span>
+                        <span class="special">}</span>
+                    <span class="special">}</span>
+                    <span class="keyword">else</span>
+                    <span class="special">{</span>
+                        <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                    <span class="special">}</span>
+                <span class="special">}</span>
+            <span class="special">}</span>
+
+            <span class="keyword">else</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"operator\"&gt;/&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ungetc</span><span class="special">(</span><span class="identifier">ch</span><span class="special">,</span> <span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* OPERATORS */</span>
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'+'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'-'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'*'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'/'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'='</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'%'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'!'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'&lt;'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'&gt;'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'&amp;'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'|'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="keyword">char</span> <span class="identifier">op</span><span class="special">[</span><span class="number">3</span><span class="special">]</span><span class="special">;</span>
+            <span class="keyword">int</span> <span class="identifier">op_pos</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="identifier">op</span><span class="special">[</span><span class="identifier">op_pos</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+            <span class="identifier">op_pos</span><span class="operator">++</span><span class="special">;</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="identifier">op</span><span class="special">[</span><span class="identifier">op_pos</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+            <span class="identifier">op_pos</span><span class="operator">++</span><span class="special">;</span>
+
+            <span class="identifier">op</span><span class="special">[</span><span class="identifier">op_pos</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+            <span class="keyword">int</span> <span class="identifier">flag</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span> <span class="identifier">i</span> <span class="operator">&lt;</span>  <span class="number">30</span><span class="special">;</span> <span class="identifier">i</span><span class="operator">++</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="keyword">if</span><span class="special">(</span><span class="identifier">strcmp</span><span class="special">(</span><span class="identifier">op</span><span class="special">,</span> <span class="identifier">operators</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span><span class="special">)</span> <span class="operator">==</span> <span class="number">0</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">flag</span> <span class="operator">=</span>  <span class="number">1</span><span class="special">;</span>
+                    <span class="keyword">break</span><span class="special">;</span>
+                <span class="special">}</span>
+            <span class="special">}</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">flag</span> <span class="operator">==</span> <span class="number">0</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"operator\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">op</span><span class="special">[</span><span class="number">0</span><span class="special">]</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ungetc</span><span class="special">(</span><span class="identifier">op</span><span class="special">[</span><span class="number">1</span><span class="special">]</span><span class="special">,</span> <span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+            <span class="keyword">else</span>
+            <span class="special">{</span>
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                        <span class="string">&quot;&lt;span class=\"operator\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+                    <span class="identifier">op</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">!=</span> <span class="character">'\0'</span><span class="special">;</span>
+                    <span class="identifier">i</span><span class="operator">++</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">op</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span><span class="special">)</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* SPECIAL CHARACTERS */</span>
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'{'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'}'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'('</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">')'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'['</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">']'</span> <span class="operator">||</span>
+                <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">';'</span> <span class="operator">||</span> <span class="identifier">ch</span> <span class="operator">==</span> <span class="character">','</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                    <span class="string">&quot;&lt;span class=\"special\"&gt;%c&lt;/span&gt;&quot;</span><span class="special">,</span>
+                    <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* STRING */</span>
+        <span class="keyword">else</span> <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'"'</span><span class="special">)</span>
+        <span class="special">{</span>
+            <span class="keyword">char</span> <span class="identifier">str</span><span class="special">[</span><span class="number">100</span><span class="special">]</span><span class="special">;</span>
+            <span class="keyword">int</span> <span class="identifier">i</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">while</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="character">'"'</span> <span class="operator">&amp;&amp;</span> <span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'\\'</span><span class="special">)</span>
+                <span class="special">{</span>
+                    <span class="identifier">str</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+                    <span class="identifier">i</span><span class="operator">++</span><span class="special">;</span>
+
+                    <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+
+                    <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">!=</span> <span class="identifier">EOF</span><span class="special">)</span>
+                    <span class="special">{</span>
+                        <span class="identifier">str</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+                        <span class="identifier">i</span><span class="operator">++</span><span class="special">;</span>
+                    <span class="special">}</span>
+                <span class="special">}</span>
+                <span class="keyword">else</span>
+                <span class="special">{</span>
+                    <span class="identifier">str</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">=</span>  <span class="identifier">ch</span><span class="special">;</span>
+                    <span class="identifier">i</span><span class="operator">++</span><span class="special">;</span>
+                <span class="special">}</span>
+
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">str</span><span class="special">[</span><span class="identifier">i</span><span class="special">]</span> <span class="operator">=</span>  <span class="character">'\0'</span><span class="special">;</span>
+
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                    <span class="string">&quot;&lt;span class=\"string\"&gt;&amp;quot;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">for</span><span class="special">(</span><span class="keyword">int</span> <span class="identifier">j</span> <span class="operator">=</span>  <span class="number">0</span><span class="special">;</span>
+                <span class="identifier">str</span><span class="special">[</span><span class="identifier">j</span><span class="special">]</span> <span class="operator">!=</span> <span class="character">'\0'</span><span class="special">;</span>
+                <span class="identifier">j</span><span class="operator">++</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">str</span><span class="special">[</span><span class="identifier">j</span><span class="special">]</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                    <span class="string">&quot;&amp;quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="keyword">if</span><span class="special">(</span><span class="identifier">ch</span> <span class="operator">==</span> <span class="character">'"'</span><span class="special">)</span>
+            <span class="special">{</span>
+                <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+            <span class="special">}</span>
+        <span class="special">}</span>
+
+        <span class="comment">/* INVALID */</span>
+        <span class="keyword">else</span>
+        <span class="special">{</span>
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span>
+                    <span class="string">&quot;&lt;span class=\"invalid\"&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="identifier">html_escape</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="identifier">ch</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="identifier">fprintf</span><span class="special">(</span><span class="identifier">output</span><span class="special">,</span> <span class="string">&quot;&lt;/span&gt;&quot;</span><span class="special">)</span><span class="special">;</span>
+
+            <span class="identifier">ch</span> <span class="operator">=</span>  <span class="identifier">fgetc</span><span class="special">(</span><span class="identifier">input</span><span class="special">)</span><span class="special">;</span>
+        <span class="special">}</span>
+    <span class="special">}</span>
+<span class="special">}</span></pre>
+</body>
+</html>

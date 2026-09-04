@@ -1,5 +1,5 @@
-📓Source_to_HTML
-[svg](https://github.com/praveena-vasu/Source_to_HTML#source_to_html)
+## 📓Source_to_HTML
+
 
 📜**Description**
 
@@ -72,7 +72,7 @@ int main()
 }
 ```
 
-**svg**
+
 
 🔶**Sample Output**
 
@@ -90,7 +90,7 @@ The generated `output.html` displays the source code with different colors for d
     Preprocessor   → Orange
 ```
 
-**svg**
+
 
 👩‍💻**Author**
 
